@@ -4,7 +4,7 @@ from config import STANDARD_MARKUP
 # Удаление всех уведомлений
 async def delete_notification_command(update, context):
     # Получаем id чата
-    chat_id = str(update.effective_message.chat_id)
+    chat_id = str(update.message.chat.id)
     # Получаем текущие уведомления
     current_jobs = context.job_queue.get_jobs_by_name(chat_id)
     # Удаляем все уведомления

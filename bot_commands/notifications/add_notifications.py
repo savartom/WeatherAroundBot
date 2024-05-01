@@ -29,17 +29,26 @@ async def add_notification(update, context):
 async def set_notification(update, context):
     # Проверяем формат ввода
     try:
-        notification_time = datetime.datetime.strptime(update.message.text, '%H:%M')
+        notif_time = datetime.datetime.strptime(update.message.text, '%H:%M').time()
     except Exception:
         await update.message.reply_text(
             'Несоответствие формату. Введите время в формате ЧЧ:ММ',
             reply_markup=ReplyKeyboardRemove()
         )
         return 1
+    # Текущее время
+    now = datetime.datetime.now().time()
+    # Находим разницу в секундах
+    first = (notif_time.hour * 3600 + notif_time.minute * 60 -
+             (now.hour * 3600 + now.minute * 60 + now.second) + 1)
+    if first < 0:
+        first += 24 * 60 * 60
     # Устанавливаем уведомление
-    context.job_queue.run_daily(weather_now_command, notification_time,
-                                user_id=update.message.from_user.id,
-                                chat_id=update.message.chat.id)
+    context.job_queue.run_repeating(weather_now_command, 60 * 60 * 24,
+                                    first=first, name=str(update.message.chat.id),
+                                    user_id=update.message.from_user.id,
+                                    chat_id=update.message.chat.id
+                                    )
     # Сообщаем об этом
     await update.message.reply_text(
         'Уведомление установлено.',
